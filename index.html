@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Monitor de Neumáticos</title>
+    <link rel="stylesheet" href="https://app.geotab.com/geotab/checkmate/main.css">
+    <style>
+        .tire-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 400px;
+            margin: 20px auto;
+            text-align: center;
+        }
+        .tire {
+            padding: 20px;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+        .warning { border-color: orange; background-color: #fff3e0; }
+        .critical { border-color: red; background-color: #ffebee; }
+        .ok { border-color: green; background-color: #e8f5e9; }
+    </style>
+</head>
+<body>
+    <div id="tire-pressure-addin">
+        <header class="geotabPageHeader">
+            <h1 class="geotabPageName">Estado de Neumáticos (Vehículo Seleccionado)</h1>
+        </header>
+        
+        <div class="geotabPageContent">
+            <p>Selecciona un vehículo para ver la presión en tiempo real.</p>
+            
+            <div class="tire-container">
+                <div class="tire" id="front-left">
+                    <h3>Delantero Izquierdo</h3>
+                    <p class="val">-- kPa</p>
+                </div>
+                <div class="tire" id="front-right">
+                    <h3>Delantero Derecho</h3>
+                    <p class="val">-- kPa</p>
+                </div>
+                <div class="tire" id="rear-left">
+                    <h3>Trasero Izquierdo</h3>
+                    <p class="val">-- kPa</p>
+                </div>
+                <div class="tire" id="rear-right">
+                    <h3>Trasero Derecho</h3>
+                    <p class="val">-- kPa</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
