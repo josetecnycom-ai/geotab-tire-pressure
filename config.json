@@ -5,13 +5,13 @@
   "isSigned": false,
   "items": [
     {
-      "url": "https://josetecnycom-ai.github.io/geotab-tire-pressure/index.html",
+      "url": "https://josetecnycom-ai.github.io/reporte-viajes-entre-zonas/index.html",
       "path": "EngineMaintenanceLink/",
       "menuName": {
         "en": "Tire Pressure",
         "es": "Presión de Neumáticos"
       },
-      "icon": "https://www.geotab.com/favicon.ico"
+      "icon": "https://www.geotab.com/images/support/v-6-icon.svg"
     }
   ]
 }
