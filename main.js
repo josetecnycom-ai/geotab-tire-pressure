@@ -108,31 +108,63 @@ geotab.addin.tirePressureAddin = function (api, state) {
                     }
                 ]);
 
-                api.multiCall(calls, function (results) {
-                    const fleetData = devices.map((device, index) => {
-                        const logs = results[index] || [];
-                        const getVal = (id) => {
-                            const found = logs.filter(l => l.diagnostic && l.diagnostic.id === id)[0];
-                            return found ? found.data : null;
-                        };
+               // SUSTITUYE EL BLOQUE "api.call("Get", { typeName: "Device" }..." POR ESTE:
 
-                        const p = { FL: getVal(diagIds.FL), FR: getVal(diagIds.FR), RL: getVal(diagIds.RL), RR: getVal(diagIds.RR) };
-                        const s = {
-                            FL: calculateStatus(p.FL, p.FR),
-                            FR: calculateStatus(p.FR, p.FL),
-                            RL: calculateStatus(p.RL, p.RR),
-                            RR: calculateStatus(p.RR, p.RL)
-                        };
+api.call("Get", { typeName: "Device" }, function (devices) {
+    // Creamos una lista de llamadas mucho más precisa
+    const calls = [];
+    
+    devices.forEach(d => {
+        // Por cada dispositivo, pedimos específicamente el ÚLTIMO dato de cada rueda
+        Object.values(diagIds).forEach(diagId => {
+            calls.push(["Get", {
+                typeName: "StatusData",
+                search: {
+                    deviceSearch: { id: d.id },
+                    diagnosticSearch: { id: diagId },
+                    // Buscamos hacia atrás lo suficiente para encontrar el último dato real
+                    fromDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+                },
+                resultsLimit: 1 // Solo queremos el más reciente de cada uno
+            }]);
+        });
+    });
 
-                        return {
-                            name: device.name, pressures: p, status: s,
-                            maxWeight: Math.max(s.FL.weight, s.FR.weight, s.RL.weight, s.RR.weight)
-                        };
-                    });
-                    renderFleet(fleetData);
-                }, function(err) { container.innerHTML = "Error: " + err; });
-            });
+    api.multiCall(calls, function (results) {
+        const fleetData = devices.map((device, devIndex) => {
+            // Cada dispositivo ahora tiene 4 resultados asignados en el array 'results'
+            const startIndex = devIndex * 4;
+            const getValFromRes = (offset) => {
+                const res = results[startIndex + offset];
+                return (res && res.length > 0) ? res[0].data : null;
+            };
+
+            const p = {
+                FL: getValFromRes(0),
+                FR: getValFromRes(1),
+                RL: getValFromRes(2),
+                RR: getValFromRes(3)
+            };
+
+            const s = {
+                FL: calculateStatus(p.FL, p.FR),
+                FR: calculateStatus(p.FR, p.FL),
+                RL: calculateStatus(p.RL, p.RR),
+                RR: calculateStatus(p.RR, p.RL)
+            };
+
+            return {
+                name: device.name,
+                pressures: p,
+                status: s,
+                maxWeight: Math.max(s.FL.weight, s.FR.weight, s.RL.weight, s.RR.weight)
+            };
+        });
+        renderFleet(fleetData);
+    }, function(err) { console.error(err); });
+});
         },
         blur: function () {}
     };
+
 };
