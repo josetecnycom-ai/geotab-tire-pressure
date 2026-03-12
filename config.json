@@ -1,17 +1,17 @@
 {
-  name Monitor de Neumáticos VTC,
-  supportEmail soporte@tecnoflotas.com,
-  version 1.0.0,
-  isSigned false,
-  items [
+  "name": "Monitor de Neumáticos VTC",
+  "supportEmail": "soporte@tecnoflotas.com",
+  "version": "1.0.0",
+  "isSigned": false,
+  "items": [
     {
-      url index.html,
-      path EngineMaintenanceLink,
-      menuName {
-        en Tire Pressure,
-        es Presión de Neumáticos
+      "url": "https://josetecnycom-ai.github.io/geotab-tire-pressure/index.html",
+      "path": "EngineMaintenanceLink/",
+      "menuName": {
+        "en": "Tire Pressure",
+        "es": "Presión de Neumáticos"
       },
-      icon httpswww.geotab.comfavicon.ico
+      "icon": "https://www.geotab.com/favicon.ico"
     }
   ]
 }
