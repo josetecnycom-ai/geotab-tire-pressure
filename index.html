@@ -2,23 +2,47 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>VTC Tire Monitor</title>
-    <link rel="stylesheet" href="https://app.geotab.com/geotab/checkmate/main.css">
+    <title>Monitor Neumáticos</title>
     <style>
-        /* Tu CSS aquí */
-        body { background: #f4f7f6; padding: 20px; }
-        .fleet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; }
-        .vehicle-card { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
+        /* Estilos generales y cuadrícula */
+        body { background: #f4f7f6; padding: 20px; font-family: sans-serif; }
+        .fleet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+        .vehicle-card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); text-align: center; }
+        .card-header { font-size: 15px; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #eee; }
+        
+        /* Alertas de texto */
+        .alert-box { color: #eb3b5a; font-size: 11px; font-weight: bold; background: #ffeaa7; padding: 6px; border-radius: 4px; margin-bottom: 15px; }
+
+        /* MAGIA CSS: El coche visto desde arriba */
+        .car-diagram { position: relative; width: 100px; height: 160px; margin: 0 auto 10px auto; }
+        
+        /* Chasis del coche */
+        .car-body-shape { position: absolute; top: 0; left: 20px; width: 60px; height: 160px; background: #dfe6e9; border-radius: 20px 20px 10px 10px; border: 2px solid #b2bec3; z-index: 1; }
+        .car-body-shape::after { content: ''; position: absolute; top: 30px; left: 8px; width: 40px; height: 35px; background: #8395a7; border-radius: 5px; } /* Parabrisas */
+        
+        /* Neumáticos con el texto del Bar dentro */
+        .tire-ui { 
+            position: absolute; width: 36px; height: 45px; border-radius: 6px; border: 2px solid #2d3436; 
+            z-index: 2; display: flex; align-items: center; justify-content: center; 
+            color: white; font-size: 11px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); box-sizing: border-box; 
+        }
+        
+        /* Posición exacta de cada rueda */
+        .FL { top: 20px; left: -5px; }
+        .FR { top: 20px; right: -5px; }
+        .RL { bottom: 20px; left: -5px; }
+        .RR { bottom: 20px; right: -5px; }
+
+        .stats-box { font-size: 10px; color: #636e72; font-weight: bold; letter-spacing: 1px; }
     </style>
 </head>
 <body>
-    <div id="tirePressureAddin" class="geotabAddin">
+    <div id="tirePressureAddin">
         <header class="geotabPageHeader">
-            <h1 class="geotabPageName">Presión de Neumáticos - Flota VTC</h1>
+            <h1 class="geotabPageName" style="font-family: sans-serif; margin-bottom: 20px;">Control de Neumáticos (Bar)</h1>
         </header>
-        <div id="fleet-container">Iniciando sistema...</div>
+        <div id="fleet-container">Cargando interfaz visual...</div>
     </div>
-
     <script src="main.js"></script>
 </body>
 </html>
