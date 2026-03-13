@@ -10,11 +10,11 @@ geotab.addin.tirePressureAddin = function (api, state) {
     };
 
     function calculateStatus(val, sideVal) {
-        if (!val || val <= 0) return { color: "#d1d8e0", weight: 0, msg: "" }; // Gris (Sin datos)
+        if (!val || val <= 0) return { color: "#d1d8e0", weight: 0, msg: "" }; 
         
         const bar = val / 100000;
         let weight = 1;
-        let color = "#20bf6b"; // VERDE: Óptimo (2.2 a 2.8 Bar)
+        let color = "#20bf6b"; // VERDE: Óptimo
         let msg = "";
 
         // 1. Umbrales de Presión en Bar
@@ -27,8 +27,8 @@ geotab.addin.tirePressureAddin = function (api, state) {
         // 2. Alerta por Desviación (> 5% diferencia en el mismo eje)
         if (sideVal && sideVal > 0) {
             if (Math.abs((val - sideVal) / sideVal) > 0.05) {
-                weight = 3; // Forzamos máxima prioridad
-                color = "#eb3b5a"; // Forzamos rojo
+                weight = 3; 
+                color = "#eb3b5a"; 
                 msg = "Posible desalineación o fuga lenta";
             }
         }
@@ -39,30 +39,24 @@ geotab.addin.tirePressureAddin = function (api, state) {
     function renderFleet(vehicles) {
         const container = document.getElementById("fleet-container");
         
-        // ORDENACIÓN: Gravedad 3 (Rojo) primero, luego 2 (Amarillo), luego 1 (Verde)
         vehicles.sort((a, b) => b.maxWeight - a.maxWeight);
 
-        // Contenedor principal con Flexbox para crear la cuadrícula
         let html = '<div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-start; padding-top: 10px;">';
 
         vehicles.forEach(v => {
             const hasCritical = v.maxWeight === 3;
             const fmt = (val) => val ? (val / 100000).toFixed(2) : '--';
             
-            // Recopilar alertas sin duplicar
             let alerts = [];
             if (v.status.FL.msg) alerts.push("Eje Del: " + v.status.FL.msg);
             if (v.status.RL.msg) alerts.push("Eje Tras: " + v.status.RL.msg);
             alerts = [...new Set(alerts)];
             
-            // Cuadro de alerta amarillo si hay problemas, o un espacio en blanco para mantener todo alineado
             const alertHtml = alerts.length > 0 
                 ? `<div style="background: #ffeaa7; color: #eb3b5a; font-size: 11px; font-weight: bold; padding: 6px; border-radius: 4px; margin-bottom: 15px; line-height: 1.3;">⚠️ ${alerts.join('<br>')}</div>` 
                 : `<div style="height: 27px; margin-bottom: 15px;"></div>`; 
 
             const borderStyle = hasCritical ? 'border: 2px solid #eb3b5a;' : 'border: 1px solid #d1d8e0;';
-
-            // Estilos CSS incrustados para forzar el dibujo
             const tireBaseStyle = "position: absolute; width: 42px; height: 50px; border-radius: 6px; border: 2px solid #2d3436; z-index: 2; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px #000; box-sizing: border-box;";
 
             html += `
@@ -72,14 +66,11 @@ geotab.addin.tirePressureAddin = function (api, state) {
                     ${alertHtml}
                     
                     <div style="position: relative; width: 140px; height: 180px; margin: 0 auto 10px auto;">
-                        
                         <div style="position: absolute; top: 10px; left: 40px; width: 60px; height: 160px; background: #dfe6e9; border-radius: 20px 20px 10px 10px; border: 2px solid #b2bec3; z-index: 1;">
                             <div style="position: absolute; top: 30px; left: 10px; width: 36px; height: 30px; background: #8395a7; border-radius: 5px;"></div>
                         </div>
-
                         <div style="${tireBaseStyle} top: 25px; left: 10px; background:${v.status.FL.color}">${fmt(v.pressures.FL)}</div>
                         <div style="${tireBaseStyle} top: 25px; right: 10px; background:${v.status.FR.color}">${fmt(v.pressures.FR)}</div>
-                        
                         <div style="${tireBaseStyle} bottom: 25px; left: 10px; background:${v.status.RL.color}">${fmt(v.pressures.RL)}</div>
                         <div style="${tireBaseStyle} bottom: 25px; right: 10px; background:${v.status.RR.color}">${fmt(v.pressures.RR)}</div>
                     </div>
@@ -97,74 +88,66 @@ geotab.addin.tirePressureAddin = function (api, state) {
         initialize: function (api, state, callback) { callback(); },
         focus: function (api, state) {
             const container = document.getElementById("fleet-container");
-            container.innerHTML = '<div style="padding:20px; text-align:center; font-family: sans-serif;">Analizando presiones en Bar y generando esquemas...</div>';
+            container.innerHTML = '<div style="padding:20px; text-align:center; font-family: sans-serif;">Extrayendo datos de presión (Último registro por rueda)...</div>';
 
             api.call("Get", { typeName: "Device" }, function (devices) {
-                const calls = devices.map(d => [
-                    "Get", {
-                        typeName: "StatusData",
-                        search: { deviceSearch: { id: d.id }, fromDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() },
-                        resultsLimit: 100 
-                    }
-                ]);
+                const calls = [];
+                const fromDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-               // SUSTITUYE EL BLOQUE "api.call("Get", { typeName: "Device" }..." POR ESTE:
+                // Novedad: Por cada dispositivo, hacemos 4 peticiones exactas.
+                devices.forEach(d => {
+                    Object.values(diagIds).forEach(diagId => {
+                        calls.push([
+                            "Get", {
+                                typeName: "StatusData",
+                                search: { 
+                                    deviceSearch: { id: d.id },
+                                    diagnosticSearch: { id: diagId }, // Filtro directo por ID
+                                    fromDate: fromDate 
+                                },
+                                resultsLimit: 1 // Solo traemos el dato más reciente
+                            }
+                        ]);
+                    });
+                });
 
-api.call("Get", { typeName: "Device" }, function (devices) {
-    // Creamos una lista de llamadas mucho más precisa
-    const calls = [];
-    
-    devices.forEach(d => {
-        // Por cada dispositivo, pedimos específicamente el ÚLTIMO dato de cada rueda
-        Object.values(diagIds).forEach(diagId => {
-            calls.push(["Get", {
-                typeName: "StatusData",
-                search: {
-                    deviceSearch: { id: d.id },
-                    diagnosticSearch: { id: diagId },
-                    // Buscamos hacia atrás lo suficiente para encontrar el último dato real
-                    fromDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-                },
-                resultsLimit: 1 // Solo queremos el más reciente de cada uno
-            }]);
-        });
-    });
+                api.multiCall(calls, function (results) {
+                    const fleetData = devices.map((device, devIndex) => {
+                        // Como hicimos 4 llamadas por dispositivo, calculamos el índice de inicio
+                        const startIndex = devIndex * 4;
+                        
+                        const getValFromRes = (offset) => {
+                            const res = results[startIndex + offset];
+                            return (res && res.length > 0) ? res[0].data : null;
+                        };
 
-    api.multiCall(calls, function (results) {
-        const fleetData = devices.map((device, devIndex) => {
-            // Cada dispositivo ahora tiene 4 resultados asignados en el array 'results'
-            const startIndex = devIndex * 4;
-            const getValFromRes = (offset) => {
-                const res = results[startIndex + offset];
-                return (res && res.length > 0) ? res[0].data : null;
-            };
+                        const p = {
+                            FL: getValFromRes(0), // Corresponde a DiagnosticTirePressureFrontLeftId
+                            FR: getValFromRes(1), // Corresponde a DiagnosticTirePressureFrontRightId
+                            RL: getValFromRes(2), // Corresponde a DiagnosticTirePressureRearLeftId
+                            RR: getValFromRes(3)  // Corresponde a DiagnosticTirePressureRearRightId
+                        };
 
-            const p = {
-                FL: getValFromRes(0),
-                FR: getValFromRes(1),
-                RL: getValFromRes(2),
-                RR: getValFromRes(3)
-            };
+                        const s = {
+                            FL: calculateStatus(p.FL, p.FR),
+                            FR: calculateStatus(p.FR, p.FL),
+                            RL: calculateStatus(p.RL, p.RR),
+                            RR: calculateStatus(p.RR, p.RL)
+                        };
 
-            const s = {
-                FL: calculateStatus(p.FL, p.FR),
-                FR: calculateStatus(p.FR, p.FL),
-                RL: calculateStatus(p.RL, p.RR),
-                RR: calculateStatus(p.RR, p.RL)
-            };
-
-            return {
-                name: device.name,
-                pressures: p,
-                status: s,
-                maxWeight: Math.max(s.FL.weight, s.FR.weight, s.RL.weight, s.RR.weight)
-            };
-        });
-        renderFleet(fleetData);
-    }, function(err) { console.error(err); });
-});
+                        return {
+                            name: device.name,
+                            pressures: p,
+                            status: s,
+                            maxWeight: Math.max(s.FL.weight, s.FR.weight, s.RL.weight, s.RR.weight)
+                        };
+                    });
+                    
+                    renderFleet(fleetData);
+                    
+                }, function(err) { container.innerHTML = "Error MultiCall: " + err; });
+            }, function(err) { container.innerHTML = "Error Device: " + err; });
         },
         blur: function () {}
     };
-
 };
