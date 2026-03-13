@@ -41,7 +41,31 @@ geotab.addin.tirePressureAddin = function (api, state) {
         
         vehicles.sort((a, b) => b.maxWeight - a.maxWeight);
 
-        let html = '<div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-start; padding-top: 10px;">';
+        // --- LEYENDA VISUAL ---
+        const legendHtml = `
+            <div style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); font-family: sans-serif; font-size: 13px; color: #2d3436; border-left: 4px solid #0984e3;">
+                <strong style="display: block; margin-bottom: 10px; font-size: 14px;">Leyenda de Avisos y Alertas:</strong>
+                <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <div style="width: 16px; height: 16px; background: #20bf6b; border-radius: 4px;"></div> Óptimo (2.2 - 2.8 Bar)
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <div style="width: 16px; height: 16px; background: #f7b731; border-radius: 4px;"></div> Aviso Leve
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <div style="width: 16px; height: 16px; background: #eb3b5a; border-radius: 4px;"></div> Alerta Crítica
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <div style="width: 16px; height: 16px; border: 2px solid #eb3b5a; border-radius: 4px; box-sizing: border-box; background: #ffeaa7;"></div> Desviación en el Eje (> 5%)
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <div style="width: 16px; height: 16px; background: #d1d8e0; border-radius: 4px;"></div> Sin Datos recientes
+                    </div>
+                </div>
+            </div>
+        `;
+
+        let html = legendHtml + '<div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-start; padding-top: 5px;">';
 
         vehicles.forEach(v => {
             const hasCritical = v.maxWeight === 3;
@@ -94,7 +118,6 @@ geotab.addin.tirePressureAddin = function (api, state) {
                 const calls = [];
                 const fromDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-                // Novedad: Por cada dispositivo, hacemos 4 peticiones exactas.
                 devices.forEach(d => {
                     Object.values(diagIds).forEach(diagId => {
                         calls.push([
@@ -102,10 +125,10 @@ geotab.addin.tirePressureAddin = function (api, state) {
                                 typeName: "StatusData",
                                 search: { 
                                     deviceSearch: { id: d.id },
-                                    diagnosticSearch: { id: diagId }, // Filtro directo por ID
+                                    diagnosticSearch: { id: diagId }, 
                                     fromDate: fromDate 
                                 },
-                                resultsLimit: 1 // Solo traemos el dato más reciente
+                                resultsLimit: 1 
                             }
                         ]);
                     });
@@ -113,7 +136,6 @@ geotab.addin.tirePressureAddin = function (api, state) {
 
                 api.multiCall(calls, function (results) {
                     const fleetData = devices.map((device, devIndex) => {
-                        // Como hicimos 4 llamadas por dispositivo, calculamos el índice de inicio
                         const startIndex = devIndex * 4;
                         
                         const getValFromRes = (offset) => {
@@ -122,10 +144,10 @@ geotab.addin.tirePressureAddin = function (api, state) {
                         };
 
                         const p = {
-                            FL: getValFromRes(0), // Corresponde a DiagnosticTirePressureFrontLeftId
-                            FR: getValFromRes(1), // Corresponde a DiagnosticTirePressureFrontRightId
-                            RL: getValFromRes(2), // Corresponde a DiagnosticTirePressureRearLeftId
-                            RR: getValFromRes(3)  // Corresponde a DiagnosticTirePressureRearRightId
+                            FL: getValFromRes(0), 
+                            FR: getValFromRes(1), 
+                            RL: getValFromRes(2), 
+                            RR: getValFromRes(3)  
                         };
 
                         const s = {
