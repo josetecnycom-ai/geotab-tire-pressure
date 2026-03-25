@@ -57,7 +57,18 @@ geotab.addin.tirePressureAddin = function (api, state) {
                     <div style="font-size: 14px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"><strong>${v.name}</strong></div>
                     ${alertHtml}
                     <div style="position: relative; width: 140px; height: 180px; margin: 0 auto;">
-                        <div style="position: absolute; top: 10px; left: 40px; width: 60px; height: 160px; background: #dfe6e9; border-radius: 20px 20px 10px 10px; border: 2px solid #b2bec3; z-index: 1;"></div>
+                        <div style="position: absolute; top: 0; left: 0; width: 140px; height: 180px; z-index: 1;">
+                            <svg viewBox="0 0 140 180" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M 42 25 Q 42 10, 70 10 Q 98 10, 98 25 L 102 145 Q 102 170, 70 170 Q 38 170, 38 145 Z" fill="rgba(0,0,0,0.1)" transform="translate(2, 4)"/>
+                                <path d="M 40 25 Q 40 10, 70 10 Q 100 10, 100 25 L 100 145 Q 100 170, 70 170 Q 40 170, 40 145 Z" fill="#f4f7f6" stroke="#ced6e0" stroke-width="2"/>
+                                <path d="M 46 45 Q 70 35, 94 45 L 88 65 Q 70 60, 52 65 Z" fill="#576574"/>
+                                <path d="M 48 130 Q 70 125, 92 130 L 88 145 Q 70 150, 52 145 Z" fill="#576574"/>
+                                <path d="M 52 65 L 48 130" stroke="#ced6e0" stroke-width="1.5" fill="none"/>
+                                <path d="M 88 65 L 92 130" stroke="#ced6e0" stroke-width="1.5" fill="none"/>
+                                <path d="M 40 55 Q 35 55, 35 60 L 35 65 Q 40 65, 40 60 Z" fill="#f4f7f6" stroke="#ced6e0" stroke-width="1"/>
+                                <path d="M 100 55 Q 105 55, 105 60 L 105 65 Q 100 65, 100 60 Z" fill="#f4f7f6" stroke="#ced6e0" stroke-width="1"/>
+                            </svg>
+                        </div>
                         <div style="${tireBaseStyle} top: 25px; left: 10px; background:${v.status.FL.color}">${fmt(v.pressures.FL)}</div>
                         <div style="${tireBaseStyle} top: 25px; right: 10px; background:${v.status.FR.color}">${fmt(v.pressures.FR)}</div>
                         <div style="${tireBaseStyle} bottom: 25px; left: 10px; background:${v.status.RL.color}">${fmt(v.pressures.RL)}</div>
