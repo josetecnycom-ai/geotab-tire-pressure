@@ -34,14 +34,22 @@ geotab.addin.tirePressureAddin = function (api, state) {
         const container = document.getElementById("fleet-container");
         vehicles.sort((a, b) => b.maxWeight - a.maxWeight);
 
+        const pt = PRESIONES["turismo"];
+        const pf = PRESIONES["furgoneta"];
+
         const legendHtml = `
             <div style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); font-family: sans-serif; font-size: 13px; color: #2d3436; border-left: 4px solid #0984e3;">
                 <strong style="display: block; margin-bottom: 10px; font-size: 14px;">Leyenda de Avisos y Alertas (Datos de última semana):</strong>
-                <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
-                    <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 16px; height: 16px; background: #20bf6b; border-radius: 4px;"></div> Óptimo (según perfil)</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 16px; height: 16px; background: #20bf6b; border-radius: 4px;"></div> Óptimo</div>
                     <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 16px; height: 16px; background: #f7b731; border-radius: 4px;"></div> Aviso Leve</div>
                     <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 16px; height: 16px; background: #eb3b5a; border-radius: 4px;"></div> Alerta Crítica</div>
-                    <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 16px; height: 16px; border: 2px solid #eb3b5a; background: #ffeaa7; border-radius: 4px;"></div> Desviación > 5%</div>
+                    <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 16px; height: 16px; border: 2px solid #eb3b5a; background: #ffeaa7; border-radius: 4px;"></div> Desviación en el eje > 5%</div>
+                </div>
+                <div style="font-size: 11px; color: #636e72; background: #f4f7f6; padding: 8px; border-radius: 4px; line-height: 1.6;">
+                    <strong>Valores de Perfiles (Bar):</strong><br>
+                    🚗 <strong>Turismo:</strong> Óptimo (${pt.minO} a ${pt.maxO}) | Aviso (${pt.minC} a ${pt.minO} / ${pt.maxO} a ${pt.maxC}) | Crítico (<${pt.minC} o >${pt.maxC})<br>
+                    🚐 <strong>Furgoneta:</strong> Óptimo (${pf.minO} a ${pf.maxO}) | Aviso (${pf.minC} a ${pf.minO} / ${pf.maxO} a ${pf.maxC}) | Crítico (<${pf.minC} o >${pf.maxC})
                 </div>
             </div>
         `;
