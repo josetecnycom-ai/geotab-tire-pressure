@@ -9,13 +9,20 @@ geotab.addin.tirePressureAddin = function (api, state) {
         RR: "DiagnosticTirePressureRearRightId"
     };
 
-    function calculateStatus(val, sideVal) {
+    const PRESIONES = {
+        "turismo":   { minC: 2.0, minO: 2.2, maxO: 2.8, maxC: 3.0 },
+        "furgoneta": { minC: 2.8, minO: 3.2, maxO: 3.8, maxC: 4.2 }
+    };
+
+    function calculateStatus(val, sideVal, profileName) {
         if (!val || val <= 0) return { color: "#d1d8e0", weight: 0, msg: "" }; 
         const bar = val / 100000;
         let weight = 1, color = "#20bf6b", msg = "";
 
-        if (bar < 2.0 || bar > 3.0) { weight = 3; color = "#eb3b5a"; } 
-        else if (bar < 2.2 || bar > 2.8) { weight = 2; color = "#f7b731"; }
+        const p = PRESIONES[profileName] || PRESIONES["turismo"];
+
+        if (bar < p.minC || bar > p.maxC) { weight = 3; color = "#eb3b5a"; } 
+        else if (bar < p.minO || bar > p.maxO) { weight = 2; color = "#f7b731"; }
 
         if (sideVal && sideVal > 0 && Math.abs((val - sideVal) / sideVal) > 0.05) {
             weight = 3; color = "#eb3b5a"; msg = "Posible desalineación o fuga lenta";
@@ -31,7 +38,7 @@ geotab.addin.tirePressureAddin = function (api, state) {
             <div style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); font-family: sans-serif; font-size: 13px; color: #2d3436; border-left: 4px solid #0984e3;">
                 <strong style="display: block; margin-bottom: 10px; font-size: 14px;">Leyenda de Avisos y Alertas (Datos de última semana):</strong>
                 <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
-                    <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 16px; height: 16px; background: #20bf6b; border-radius: 4px;"></div> Óptimo (2.2 - 2.8 Bar)</div>
+                    <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 16px; height: 16px; background: #20bf6b; border-radius: 4px;"></div> Óptimo (según perfil)</div>
                     <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 16px; height: 16px; background: #f7b731; border-radius: 4px;"></div> Aviso Leve</div>
                     <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 16px; height: 16px; background: #eb3b5a; border-radius: 4px;"></div> Alerta Crítica</div>
                     <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 16px; height: 16px; border: 2px solid #eb3b5a; background: #ffeaa7; border-radius: 4px;"></div> Desviación > 5%</div>
@@ -84,9 +91,18 @@ geotab.addin.tirePressureAddin = function (api, state) {
         initialize: function (api, state, callback) { callback(); },
         focus: function (api, state) {
             const container = document.getElementById("fleet-container");
-            container.innerHTML = '<div style="padding:20px; text-align:center;">Cargando flota completa...</div>';
+            container.innerHTML = '<div style="padding:20px; text-align:center;">Cargando flota y configurando perfiles...</div>';
 
-            api.call("Get", { typeName: "Device" }, function (devices) {
+            api.multiCall([
+                ["Get", { typeName: "Group" }],
+                ["Get", { typeName: "Device" }]
+            ], function (results) {
+                const groupsList = results[0];
+                const devices = results[1];
+
+                const groupMap = {};
+                groupsList.forEach(g => { groupMap[g.id] = (g.name || "").toLowerCase(); });
+
                 const fromDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
                 
                 // SOLO 4 LLAMADAS: Una por cada tipo de rueda para TODA la flota
@@ -117,10 +133,20 @@ geotab.addin.tirePressureAddin = function (api, state) {
                     });
 
                     const fleetData = devices.map(d => {
+                        let profName = "turismo";
+                        if (d.groups) {
+                            for (let i = 0; i < d.groups.length; i++) {
+                                const gName = groupMap[d.groups[i].id];
+                                if (gName && gName.includes("furgoneta")) {
+                                    profName = "furgoneta"; break;
+                                }
+                            }
+                        }
+
                         const p = masterData[d.id];
                         const s = {
-                            FL: calculateStatus(p.FL, p.FR), FR: calculateStatus(p.FR, p.FL),
-                            RL: calculateStatus(p.RL, p.RR), RR: calculateStatus(p.RR, p.RL)
+                            FL: calculateStatus(p.FL, p.FR, profName), FR: calculateStatus(p.FR, p.FL, profName),
+                            RL: calculateStatus(p.RL, p.RR, profName), RR: calculateStatus(p.RR, p.RL, profName)
                         };
                         return {
                             name: d.name, pressures: p, status: s,
